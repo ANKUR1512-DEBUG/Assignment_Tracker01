@@ -1,0 +1,193 @@
+import 'dart:ui';
+
+import 'package:flutter/material.dart'
+    show
+        AlertDialog,
+        AppBar,
+        BuildContext,
+        Card,
+        Center,
+        Colors,
+        Column,
+        EdgeInsets,
+        ElevatedButton,
+        FloatingActionButton,
+        Icon,
+        IconButton,
+        Icons,
+        InputDecoration,
+        ListTile,
+        ListView,
+        Navigator,
+        Scaffold,
+        SingleChildScrollView,
+        SizedBox,
+        State,
+        StatefulWidget,
+        Text,
+        TextButton,
+        TextEditingController,
+        TextField,
+        TextStyle,
+        Widget,
+        showDatePicker,
+        showDialog;
+
+class Assignment {
+  String title;
+  String subject;
+  String description;
+  DateTime dueDate;
+  bool isCompleted;
+
+  Assignment({
+    required this.title,
+    required this.subject,
+    required this.description,
+    required this.dueDate,
+    this.isCompleted = false,
+  });
+}
+
+class Homepage extends StatefulWidget {
+  const Homepage({super.key});
+
+  @override
+  _HomepageState createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  List<Assignment> assignments = []; // Store all assignments
+
+  void _addAssignment(Assignment newAssignment) {
+    setState(() {
+      assignments.add(newAssignment);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Assignment Tracker ",
+          style: TextStyle(
+            color: Colors.white, // <-- sets text color to white
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+
+        backgroundColor: Colors.black,
+      ),
+      body: assignments.isEmpty
+          ? const Center(
+              child: Text(
+                "No assignments yet!",
+                style: TextStyle(fontSize: 18),
+              ),
+            )
+          : ListView.builder(
+              itemCount: assignments.length,
+              itemBuilder: (context, index) {
+                final assignment = assignments[index];
+                return Card(
+                  margin: const EdgeInsets.all(8),
+                  child: ListTile(
+                    title: Text(assignment.title),
+                    subtitle: Text(
+                      "${assignment.subject} • Due: ${assignment.dueDate.toString().split(' ')[0]}",
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          assignments.removeAt(index);
+                        });
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddAssignmentDialog();
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddAssignmentDialog() {
+    final titleController = TextEditingController();
+    final subjectController = TextEditingController();
+    final descriptionController = TextEditingController();
+    DateTime selectedDate = DateTime.now();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Add New Assignment"),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(labelText: "Title"),
+                ),
+                TextField(
+                  controller: subjectController,
+                  decoration: const InputDecoration(labelText: "Subject"),
+                ),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(labelText: "Description"),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      selectedDate = picked;
+                    }
+                  },
+                  child: const Text("Select Due Date"),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (titleController.text.isNotEmpty &&
+                    subjectController.text.isNotEmpty) {
+                  _addAssignment(
+                    Assignment(
+                      title: titleController.text,
+                      subject: subjectController.text,
+                      description: descriptionController.text,
+                      dueDate: selectedDate,
+                    ),
+                  );
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
